@@ -20,12 +20,23 @@ interface PluginType {
 }
 
 main(process.argv.slice(2), {
-  target: ts.ScriptTarget.ES5,
-  module: ts.ModuleKind.CommonJS,
+  // target: ts.ScriptTarget.ES5,
+  // module: ts.ModuleKind.CommonJS,
+  jsx: ts.JsxEmit.React,
 });
 
-function createErrorMessage(sourceFile: ts.SourceFile, errorMessage: string) {
-  return `${sourceFile.fileName} (${""},${""}) ${errorMessage}`;
+function createErrorMessage(
+  node: ts.Node,
+  sourceFile: ts.SourceFile,
+  errorMessage: string
+) {
+  const { line, character } = ts.getLineAndCharacterOfPosition(
+    sourceFile,
+    node.getStart(sourceFile)
+  );
+  return `${sourceFile.fileName} (${line + 1},${
+    character + 1
+  }) ${errorMessage}`;
 }
 
 // i18n.t();
@@ -91,18 +102,18 @@ function parseI18nPointT(): PluginType {
           if (ts.isStringLiteral(trueResultNode)) {
             results.push(trueResultNode.text);
           } else {
-            errors.push(createErrorMessage(sourceFile, ERROR_MSG_TWO));
+            errors.push(createErrorMessage(node, sourceFile, ERROR_MSG_TWO));
           }
 
           if (ts.isStringLiteral(falseResultNode)) {
             results.push(falseResultNode.text);
           } else {
-            errors.push(createErrorMessage(sourceFile, ERROR_MSG_TWO));
+            errors.push(createErrorMessage(node, sourceFile, ERROR_MSG_TWO));
           }
         }
 
         if (results.length <= 0 && errors.length <= 0) {
-          errors.push(createErrorMessage(sourceFile, ERROR_MSG_ONE));
+          errors.push(createErrorMessage(node, sourceFile, ERROR_MSG_ONE));
         }
 
         return {
@@ -110,6 +121,7 @@ function parseI18nPointT(): PluginType {
           errors,
         };
       } catch (e) {
+        // console.log("e", e);
         return {
           results: [],
           errors: [],
